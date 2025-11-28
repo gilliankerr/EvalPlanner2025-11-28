@@ -1,106 +1,4 @@
-module.exports = [
-  {
-    step_name: 'prompt1',
-    display_name: 'Prompt 1',
-    content: `# Primary Objective
-
-Analyze all available information and, using your expertise and web search as needed, define the program's key terms, goals, activities, target populations, and intended outcomes. Where details are missing, infer them based on best practices and analogous programs, clearly flagging any assumptions. Use the organization's own vocabulary when possible. Be sure you are focusing on {{programName}} and not on other programs delivered by the organization!
-
----
-
-## Program Information
-
-**Organization:** {{organizationName}}
-**Program Name:** {{programName}}
-
-**About the Program:**
-{{aboutProgram}}
-
-**Web Content:**
-{{scrapedContent}}
-
----
-
-## Output Requirements
-
-Based on the provided information, do the following:
-
-Identify and describe the underlying program model by analyzing:
-
-• Target population and presenting issues addressed 
-• Core intervention strategies and service delivery methods 
-• Theoretical foundations and logic model (implicit or explicit)
-• Program goals, intended outcomes, and theory of change
-• Service intensity, duration, and delivery setting
-• Staff roles and qualifications required
-
-Deliver a comprehensive program model description including:
-
-• Classification within established program typologies
-• Key assumptions about how change occurs
-• Primary mechanisms of action
-• Comparison to similar evidence-based models in the literature
-
-## Structured Data Extraction
-
-After completing the comprehensive narrative analysis above, provide exactly one JSON object at the end with these specific keys:
-
-- **program_type_plural**: A concise phrase describing the general type/category of program in plural form (e.g., "financial literacy programs", "mental health services", "after-school programs", "workforce development programs")
-- **target_population**: A specific description of who the program serves (e.g., "low-income families in urban areas", "youth ages 12-18", "adults with substance use disorders", "rural communities")
-
-Example JSON format:
-\`\`\`json
-{
-  "program_type_plural": "financial literacy programs",
-  "target_population": "low-income adults in Toronto"
-}
-\`\`\``,
-    change_notes: 'Initial version - extracted from StepThree.tsx'
-  },
-  {
-    step_name: 'prompt2',
-    display_name: 'Prompt 2',
-    content: `# Primary Objective
-
-Building upon the program analysis already completed, create a comprehensive evaluation framework for {{programName}}. Use your expertise and web search as needed to develop specific evaluation approaches, metrics, and methodologies that align with the program model and theory of change identified in the analysis.
-
----
-
-## Program Information
-
-**Organization:** {{organizationName}}
-**Program Name:** {{programName}}
-
-**About the Program:**
-{{aboutProgram}}
-
-**Web Content:**
-{{scrapedContent}}
-
-**Program Analysis (from Prompt 1):**
-{{programAnalysis}}
-
----
-
-## Output Requirements
-
-Based on the program analysis provided above, develop an evaluation framework that includes:
-
-• Specific evaluation questions aligned with the program's theory of change
-• Appropriate evaluation methodologies (process, outcome, impact)
-• Key performance indicators and metrics for each program component
-• Data collection methods suited to the program context and population
-• Timeline and phases for evaluation implementation
-• Stakeholder engagement strategies for the evaluation
-• Considerations for equity, cultural appropriateness, and accessibility in evaluation design
-
-Your framework should directly reference and build upon the program model, target population, intervention strategies, and outcomes identified in the Program Analysis section above. Do not re-analyze the program model; instead, focus on HOW to evaluate it effectively.`,
-    change_notes: 'Updated to use programAnalysis from Step 3 as input - fixes dependency flow'
-  },
-  {
-    step_name: 'report_template',
-    display_name: 'Report Template',
-    content: `# Primary Objective
+# Primary Objective
 
 Produce an accurate, detailed, and comprehensive evaluation plan that will guide a useful evaluation based on the previous analyses and by customizing the detailed document template below. The output should be one consolidated Markdown document that follows the exact structure and formatting rules specified below.
 
@@ -135,11 +33,11 @@ Produce an accurate, detailed, and comprehensive evaluation plan that will guide
 2. Begin with the exact report title and end with the exact footer provided in the template.
 3. Use **sentence case** for all headings and titles (e.g., ## Summary of the program).
 4. Preserve every ## heading **exactly** as specified—no additions, deletions, or re-ordering.
-5. Write in clear, accessible, non-jargon language (≈ 9th-grade reading level).
+5. Write in clear, accessible, non-jargon language (approximately 9th-grade reading level).
 6. Clearly separate **user-provided facts** from **expert recommendations**.
     - Example phrasing:
-        - "According to the program description, …" (user fact)
-        - "Based on best practices for similar programs, …" (expert input)
+        - "According to the program description, ..." (user fact)
+        - "Based on best practices for similar programs, ..." (expert input)
 7. Proofread for consistency, clarity, and grammar before output.
 
 ### Required Content & Structure
@@ -150,11 +48,11 @@ Follow **this template verbatim**—replace bracketed notes with actual content,
 
 Created on {{currentDate}} by LogicalOutcomes Evaluation Planner
 
-This evaluation plan is designed to be a living document, supporting {{organizationName}} in its commitment to continuous improvement and demonstrating the impact of {{programName}}. The approach is collaborative and aims to provide actionable insights for program staff, management, and funders. It is guided by the principles of practical, utilization-focused evaluation. 
+This evaluation plan is designed to be a living document, supporting {{organizationName}} in its commitment to continuous improvement and demonstrating the impact of {{programName}}. The approach is collaborative and aims to provide actionable insights for program staff, management, and funders. It is guided by the principles of practical, utilization-focused evaluation.
 
-This plan does not include citations or research references. It is based on the [LogicalOutcomes Evaluation Planning Handbook](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4815131) by Gillian Kerr and Sophie Llewelyn, which describes a structured process that relies on general evidence about effective nonprofit programs, supported by an in-depth web search. 
+This plan does not include citations or research references. It is based on the [LogicalOutcomes Evaluation Planning Handbook](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4815131) by Gillian Kerr and Sophie Llewelyn, which describes a structured process that relies on general evidence about effective nonprofit programs, supported by an in-depth web search.
 
-We recommend that users also carry out a literature review to check that the evaluation plan is supported by peer-reviewed evidence in research journals. Our current recommended AI literature search tools are [Undermind](https://www.undermind.ai/) followed by [FutureHouse Falcon](https://platform.futurehouse.org/) and [Consensus](https://consensus.app/). The prompt should be something like, "I want to find empirical research (including peer-reviewed publications and high-quality gray literature) identifying essential program delivery elements and critical success factors for {{programTypePlural}} serving {{targetPopulation}}." Users can then re-do the evaluation planning app and paste the relevant parts of the literature review into the 'About the Program' box. 
+We recommend that users also carry out a literature review to check that the evaluation plan is supported by peer-reviewed evidence in research journals. Our current recommended AI literature search tools are [Undermind](https://www.undermind.ai/) followed by [FutureHouse Falcon](https://platform.futurehouse.org/) and [Consensus](https://consensus.app/). The prompt should be something like, "I want to find empirical research (including peer-reviewed publications and high-quality gray literature) identifying essential program delivery elements and critical success factors for {{programTypePlural}} serving {{targetPopulation}}." Users can then re-do the evaluation planning app and paste the relevant parts of the literature review into the 'About the Program' box.
 
 ## Program summary and analysis
 
@@ -174,13 +72,13 @@ This section synthesizes the information provided about {{programName}} enriched
 
 **Example: Intake and Orientation**
 
-• Receiving an orientation to program services
-• Completing an intake assessment with a case manager
+* Receiving an orientation to program services
+* Completing an intake assessment with a case manager
 
 **Skill-Building Workshops**
 
-• Attending weekly workshops on financial literacy
-• Participating in mock job interviews)
+* Attending weekly workshops on financial literacy
+* Participating in mock job interviews)
 
 ### Desired impact
 
@@ -198,10 +96,10 @@ This section synthesizes the information provided about {{programName}} enriched
 
 (Describe 5-7 evidence-based processes that are critical for the success of this program model. Always include the following processes customized for the program:
 
-• **Feedback and quality control**: Establish a system for ongoing feedback that informs program changes and improvements.
-• **Participatory decision-making**: Engage community members and participants in shaping the program, enhancing relevance and commitment.
-• **Staff development**: Continuous training for staff to improve delivery and responsiveness.
-• **Resource management**: Monitor use of resources to maintain program efficiency and sustainability)
+* **Feedback and quality control**: Establish a system for ongoing feedback that informs program changes and improvements.
+* **Participatory decision-making**: Engage community members and participants in shaping the program, enhancing relevance and commitment.
+* **Staff development**: Continuous training for staff to improve delivery and responsiveness.
+* **Resource management**: Monitor use of resources to maintain program efficiency and sustainability)
 
 ### Critical success factors
 
@@ -213,13 +111,13 @@ This section synthesizes the information provided about {{programName}} enriched
 
 ### Potential program risks
 
-(Identify potential risks to the program's success using a risk matrix approach. Structure this by key interest groups and include evidence-based risk mitigation strategies. Be sure to consider the following risks and include them if relevant: 
+(Identify potential risks to the program's success using a risk matrix approach. Structure this by key interest groups and include evidence-based risk mitigation strategies. Be sure to consider the following risks and include them if relevant:
 
 - **Participants**: Potential for not feeling engaged or seeing visible benefits, leading to dropout.
 - **Program staff**: Inadequate training leading to poorly delivered activities; Overwork and burnout due to high demands and potentially limited resources.
 - **Community partners**: Misalignment of expectations and program objectives could strain relationships.
 - **Cultural insensitivity**: Failing to resonate with or respect the diverse cultural backgrounds of participants can lead to disengagement and dissatisfaction.
-- **Funders and sponsors**: Inefficient use of funds or lack of visible impact may result in reduced support.) 
+- **Funders and sponsors**: Inefficient use of funds or lack of visible impact may result in reduced support.)
 
 ### Areas of evaluation focus
 
@@ -253,13 +151,13 @@ List the following objectives of the evaluation as a numbered list, customized f
 
 ### Evaluation questions
 
-List the following evaluation questions, customized for the program: 
+List the following evaluation questions, customized for the program:
 
 1. What activities are provided by the program?
 2. To what extent is the program being implemented as designed and meeting quality standards?
 3. What are the characteristics of the populations served by the program?
 4. What do participants think about services and what are their suggestions?
-5. What do staff and other key interest groups think about services and what are their suggestions? 
+5. What do staff and other key interest groups think about services and what are their suggestions?
 6. To what extent are participants meeting their goals?
 7. What short-term and mid-term changes are participants experiencing?
 8. What evidence suggests the program is contributing to its desired long-term impact?
@@ -278,7 +176,7 @@ The logic model is outputted as a markdown table. The output is ONLY the markdow
 
 Present the evaluation framework in a Markdown table. This operationalizes the logic model. For each element, create a specific, measurable indicator.
 
-Note to the user that the evaluation framework assumes that there is a client record system that tracks each participant. If the program does not have a client record system, the evaluation should focus on outputs and process measures rather than outcome measures since the results gained from surveys with low response rates will not be statistically valid. 
+Note to the user that the evaluation framework assumes that there is a client record system that tracks each participant. If the program does not have a client record system, the evaluation should focus on outputs and process measures rather than outcome measures since the results gained from surveys with low response rates will not be statistically valid.
 
 Customize the following table structure for the current program:
 
@@ -290,7 +188,7 @@ Customize the following table structure for the current program:
 | Delivery milestones for evaluation | # weeks +/- target; Quality rating; Thematic analysis of optional 'description' field | Project manager | Document review of progress reports; Observation or audit | Delivery dates for evaluation plan, data collection, clean data, progress and final reports etc. compared to target dates. Include quality rating e.g., evaluation plan has framework approved by sponsor. Data is clean and useful, consent obtained, minimum risk of harm, quality is good enough for purpose. |
 | SHORT-TERM OUTCOMES (reported quarterly, though some data collection may be on annual schedule) |     |     |     |     |
 | Meet participant needs | Goal questionnaire | Participant | Questionnaire or interview | Collected in client record system or with attached survey |
-| Increase responsiveness to participants | Suggestions; Impact interview; Participant satisfaction; # team debriefs; Thematic analysis | Participant; Reviewer | Questionnaire or interview; Observation or audit | Multiple languages including audio, can cautiously include demographics and interest‑group type. Minimize "client satisfaction" surveys unless incorporated into service delivery. Team debriefs are based on notes from team meetings in which the agenda includes program quality and feedback from participants. |
+| Increase responsiveness to participants | Suggestions; Impact interview; Participant satisfaction; # team debriefs; Thematic analysis | Participant; Reviewer | Questionnaire or interview; Observation or audit | Multiple languages including audio, can cautiously include demographics and interest-group type. Minimize "client satisfaction" surveys unless incorporated into service delivery. Team debriefs are based on notes from team meetings in which the agenda includes program quality and feedback from participants. |
 | Improve program quality and fidelity | Implementation fidelity/ program quality; Analysis of process data | Reviewer | Observation or audit; Analysis of client record system | Include quality measure as part of client record system to ensure that correct services are being provided. Process data includes waiting time for intake, assessment, referrals. |
 | Increase accessibility and equity to services | Suggestions; Impact interview; Analysis of intakes, dropouts compared to target population | Participant; Reviewer | Questionnaire or interview; Observation or audit | Changes made to program via notes, plans, responses from participants |
 | Increase responsiveness to interest groups | Suggestions; Impact interview; Occasional satisfaction surveys | Interest group member | Questionnaire or interview; Observation or audit | Employees, local employers, community members, etc. Changes made to program via notes, plans, responses from participants. Minimize 'satisfaction' surveys unless incorporated into service changes. |
@@ -337,7 +235,7 @@ The evaluation project includes the following activities divided into four overl
 
 ### 3. Develop and test data collection tools
 
-- Review and possibly adapt current client record system if one exists to assess whether it can generate reports for participant goals, milestones and activities. For example, every participant should be asked what they hope to get from the services, and if feasible asked later if they achieved their goals. 
+- Review and possibly adapt current client record system if one exists to assess whether it can generate reports for participant goals, milestones and activities. For example, every participant should be asked what they hope to get from the services, and if feasible asked later if they achieved their goals.
 - Draft all data collection tools (surveys, interview guides, tracking sheets). If possible, adapt and customize them from existing validated data collection tools to save time and improve validity.
 - Pilot test the tools with a small group of participants and staff to ensure clarity and cultural appropriateness.
 - Refine tools based on pilot feedback.
@@ -446,20 +344,4 @@ Now customize this entire template for the specific program described in the pro
 4. Follow the sentence case formatting for headings
 5. Include the exact boilerplate text for the implementation phases and roles sections
 6. Create program-specific logic model and evaluation framework tables
-7. Make the content accessible and clear (9th grade reading level)`,
-    change_notes: 'Initial version - extracted from StepFive.tsx'
-  },
-  {
-    step_name: 'email_delivery',
-    display_name: 'Email Delivery Template',
-    content: `Hello, attached is the evaluation plan you requested from the LogicalOutcomes Evaluation Planner at www.logicaloutcomes.net. 
-
-It is for {{programName}} delivered by {{organizationName}}. It was generated on {{currentDateTime}}. 
-
-This is just a draft and should be reviewed carefully for accuracy. To improve its accuracy, feel free to re-try the Evaluation Planner app and add relevant information in the form. For example, paste additional web pages about the organization or information about the population served or the results of a literature review on effective program models. 
-
-Best regards,
-LogicalOutcomes`,
-    change_notes: 'Initial version - extracted from StepSix.tsx email body'
-  }
-]
+7. Make the content accessible and clear (9th grade reading level)

@@ -31,7 +31,7 @@ const Prompt2: React.FC<Prompt2Props> = ({ programData, updateProgramData, onCom
 
     try {
       const adminTemplate = await fetchPrompt('prompt2');
-      
+
       const analysisPrompt = buildPromptWithContext(adminTemplate, {
         organizationName: programData.organizationName,
         programName: programData.programName,
@@ -55,10 +55,9 @@ const Prompt2: React.FC<Prompt2Props> = ({ programData, updateProgramData, onCom
             organizationName: programData.organizationName,
             programName: programData.programName
           }
-        },
-        email: programData.userEmail
+        }
       };
-      
+
       const response = await fetch('/api/jobs', {
         method: 'POST',
         headers: {
@@ -74,9 +73,9 @@ const Prompt2: React.FC<Prompt2Props> = ({ programData, updateProgramData, onCom
       const data = await response.json();
       const createdJobId = data.job_id;
       setJobId(createdJobId);
-      
+
       console.log(`Job ${createdJobId} created, polling for results...`);
-      
+
       pollJobStatus(createdJobId);
 
     } catch (error) {
@@ -92,17 +91,17 @@ const Prompt2: React.FC<Prompt2Props> = ({ programData, updateProgramData, onCom
 
     const poll = async () => {
       try {
-        const response = await fetch(`/api/jobs/${jobId}?email=${encodeURIComponent(programData.userEmail)}`);
-        
+        const response = await fetch(`/api/jobs/${jobId}`);
+
         if (!response.ok) {
           throw new Error(`Job status check failed: ${response.status}`);
         }
 
         const job = await response.json();
-        
+
         if (job.status === 'completed') {
           const framework = job.result;
-          
+
           setAnalysisResult(framework);
           updateProgramData({ evaluationFramework: framework });
           setAnalysisStatus('complete');
@@ -111,7 +110,7 @@ const Prompt2: React.FC<Prompt2Props> = ({ programData, updateProgramData, onCom
             setIsProcessing(false);
             onComplete();
           }, 2000);
-          
+
         } else if (job.status === 'failed') {
           throw new Error(job.error || 'Job processing failed');
         } else if (job.status === 'pending' || job.status === 'processing') {
@@ -140,8 +139,8 @@ const Prompt2: React.FC<Prompt2Props> = ({ programData, updateProgramData, onCom
             <Sparkles className={styles.icon} />
           </div>
           <div>
-            <h2 className={styles.title}>AI Program Model Analysis</h2>
-            <p className={styles.subtitle}>Analyzing program model using advanced AI and web search</p>
+            <h2 className={styles.title}>AI Evaluation Framework</h2>
+            <p className={styles.subtitle}>Building evaluation framework using advanced AI</p>
           </div>
         </div>
       </div>
@@ -158,24 +157,24 @@ const Prompt2: React.FC<Prompt2Props> = ({ programData, updateProgramData, onCom
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             )}
-            
+
             <div>
               <h3 className={styles.statusTitle}>
-                {analysisStatus === 'analyzing' && 'Analyzing Program Model...'}
-                {analysisStatus === 'complete' && 'Analysis Complete'}
-                {analysisStatus === 'error' && 'Analysis Failed'}
-                {analysisStatus === 'idle' && 'Preparing Analysis...'}
+                {analysisStatus === 'analyzing' && 'Building Evaluation Framework...'}
+                {analysisStatus === 'complete' && 'Framework Complete'}
+                {analysisStatus === 'error' && 'Framework Generation Failed'}
+                {analysisStatus === 'idle' && 'Preparing Framework Generation...'}
               </h3>
               <p className={styles.statusDescription}>
                 {analysisStatus === 'analyzing' && (
                   <>
-                    Processing... Please keep this window open until complete. Results will be emailed to {programData.userEmail}
+                    Processing... Please keep this window open until complete.
                     {jobId && <span style={{ display: 'block', marginTop: '8px', fontSize: '0.9em', opacity: 0.8 }}>Job ID: {jobId}</span>}
                   </>
                 )}
-                {analysisStatus === 'complete' && 'Program model analysis completed successfully'}
-                {analysisStatus === 'error' && 'An error occurred during analysis'}
-                {analysisStatus === 'idle' && 'Setting up analysis parameters'}
+                {analysisStatus === 'complete' && 'Evaluation framework generated successfully'}
+                {analysisStatus === 'error' && 'An error occurred during framework generation'}
+                {analysisStatus === 'idle' && 'Setting up framework generation parameters'}
               </p>
             </div>
           </div>
@@ -196,7 +195,7 @@ const Prompt2: React.FC<Prompt2Props> = ({ programData, updateProgramData, onCom
                 </button>
                 <button
                   onClick={() => {
-                    updateProgramData({ 
+                    updateProgramData({
                       evaluationFramework: 'Framework generation skipped by user due to error'
                     });
                     setIsProcessing(false);
@@ -215,26 +214,26 @@ const Prompt2: React.FC<Prompt2Props> = ({ programData, updateProgramData, onCom
           <div className={styles.progressList}>
             <div className={styles.progressItem}>
               <div className={styles.progressDot}></div>
-              <span className={styles.progressText}>Identifying target population and presenting issues</span>
+              <span className={styles.progressText}>Developing evaluation questions</span>
             </div>
             <div className={styles.progressItem}>
               <div className={styles.progressDot} style={{ animationDelay: '0.5s' }}></div>
-              <span className={styles.progressText}>Analyzing core intervention strategies</span>
+              <span className={styles.progressText}>Defining key performance indicators</span>
             </div>
             <div className={styles.progressItem}>
               <div className={styles.progressDot} style={{ animationDelay: '1s' }}></div>
-              <span className={styles.progressText}>Determining theoretical foundations</span>
+              <span className={styles.progressText}>Designing data collection methods</span>
             </div>
             <div className={styles.progressItem}>
               <div className={styles.progressDot} style={{ animationDelay: '1.5s' }}></div>
-              <span className={styles.progressText}>Comparing with evidence-based models</span>
+              <span className={styles.progressText}>Creating evaluation timeline</span>
             </div>
           </div>
         )}
 
         {analysisResult && (
           <div className={styles.resultsSection}>
-            <h4 className={styles.resultsTitle}>Analysis Results</h4>
+            <h4 className={styles.resultsTitle}>Framework Results</h4>
             <div className={styles.resultsBox}>
               <pre className={styles.resultsContent}>
                 {analysisResult}
@@ -244,11 +243,11 @@ const Prompt2: React.FC<Prompt2Props> = ({ programData, updateProgramData, onCom
         )}
 
         <div className={styles.detailsBox}>
-          <h4 className={styles.detailsTitle}>Analysis Details</h4>
+          <h4 className={styles.detailsTitle}>Framework Details</h4>
           <div className={styles.detailsList}>
             <div>• Focus: {programData.programName}</div>
             <div>• Organization: {programData.organizationName}</div>
-            <div>• Data Sources: Program description, URLs, additional context</div>
+            <div>• Data Sources: Program analysis, description, URLs</div>
           </div>
         </div>
       </div>

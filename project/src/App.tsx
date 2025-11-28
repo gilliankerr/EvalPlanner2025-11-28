@@ -1,5 +1,5 @@
-import { Suspense, lazy, useState } from 'react';
-import { Loader2, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import logoIcon from './assets/logo.jpg';
 import StepOne from './components/StepOne';
 import StepTwo from './components/StepTwo';
@@ -7,7 +7,6 @@ import Prompt1 from './components/Prompt1';
 import Prompt2 from './components/Prompt2';
 import ReportTemplate from './components/ReportTemplate';
 import StepSix from './components/StepSix';
-const PromptAdmin = lazy(() => import('./components/PromptAdmin'));
 import PrivacyPolicy from './components/PrivacyPolicy';
 import AboutApp from './components/AboutApp';
 import StepProgress from './components/StepProgress';
@@ -16,16 +15,16 @@ import styles from './App.module.css';
 
 /*
  * Component Naming Convention:
- * UI Components use names aligned with the Admin interface:
- *   - Prompt1 (Step 3) → Database: prompt1
- *   - Prompt2 (Step 4) → Database: prompt2
- *   - ReportTemplate (Step 5) → Database: report_template
- * 
- * Environment Variables:
- *   - VITE_PROMPT1_MODEL, VITE_PROMPT1_TEMPERATURE
- *   - VITE_PROMPT2_MODEL, VITE_PROMPT2_TEMPERATURE
- *   - VITE_REPORT_TEMPLATE_MODEL, VITE_REPORT_TEMPLATE_TEMPERATURE
- * 
+ * UI Components use names aligned with the workflow:
+ *   - Prompt1 (Step 3) → prompt file: prompts/prompt1.md
+ *   - Prompt2 (Step 4) → prompt file: prompts/prompt2.md
+ *   - ReportTemplate (Step 5) → prompt file: prompts/report_template.md
+ *
+ * Environment Variables (optional, with defaults):
+ *   - PROMPT1_MODEL, PROMPT1_TEMPERATURE
+ *   - PROMPT2_MODEL, PROMPT2_TEMPERATURE
+ *   - REPORT_TEMPLATE_MODEL, REPORT_TEMPLATE_TEMPERATURE
+ *
  * Workflow Configuration:
  *   - See config/workflow.ts for phase definitions and customization
  *   - UI displays 3 phases but maintains 6 backend steps for processing
@@ -37,8 +36,6 @@ export interface ProgramData {
   organizationName: string;
   programName: string;
   aboutProgram: string;
-  userEmail: string;
-  deliveryMethod: string;
   urls: string[];
   scrapedContent: string;
   labeledScrapedContent?: LabeledScrapeResult[];
@@ -50,7 +47,6 @@ export interface ProgramData {
 }
 
 function App() {
-  const [showAdmin, setShowAdmin] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showAboutApp, setShowAboutApp] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -60,8 +56,6 @@ function App() {
     organizationName: '',
     programName: '',
     aboutProgram: '',
-    userEmail: '',
-    deliveryMethod: 'download',
     urls: [],
     scrapedContent: '',
     programAnalysis: '',
@@ -89,8 +83,8 @@ function App() {
     switch (currentStep) {
       case 1:
         return (
-          <StepOne 
-            programData={programData} 
+          <StepOne
+            programData={programData}
             updateProgramData={updateProgramData}
             onComplete={() => {
               markStepComplete(1);
@@ -101,7 +95,7 @@ function App() {
         );
       case 2:
         return (
-          <StepTwo 
+          <StepTwo
             programData={programData}
             updateProgramData={updateProgramData}
             onComplete={() => {
@@ -113,7 +107,7 @@ function App() {
         );
       case 3:
         return (
-          <Prompt1 
+          <Prompt1
             programData={programData}
             updateProgramData={updateProgramData}
             onComplete={() => {
@@ -125,7 +119,7 @@ function App() {
         );
       case 4:
         return (
-          <Prompt2 
+          <Prompt2
             programData={programData}
             updateProgramData={updateProgramData}
             onComplete={() => {
@@ -137,7 +131,7 @@ function App() {
         );
       case 5:
         return (
-          <ReportTemplate 
+          <ReportTemplate
             programData={programData}
             updateProgramData={updateProgramData}
             onComplete={() => {
@@ -149,7 +143,7 @@ function App() {
         );
       case 6:
         return (
-          <StepSix 
+          <StepSix
             programData={programData}
             updateProgramData={updateProgramData}
             onComplete={() => {
@@ -162,23 +156,6 @@ function App() {
         return null;
     }
   };
-
-  if (showAdmin) {
-    return (
-      <Suspense
-        fallback={(
-          <div className={styles.appContainer}>
-            <div className={styles.adminLoading}>
-              <Loader2 className={styles.processingIcon} />
-              <span>Loading admin tools...</span>
-            </div>
-          </div>
-        )}
-      >
-        <PromptAdmin onBack={() => setShowAdmin(false)} />
-      </Suspense>
-    );
-  }
 
   return (
     <div className={styles.appContainer}>
@@ -200,18 +177,11 @@ function App() {
                 <span className={styles.processingText}>Processing...</span>
               </div>
             )}
-            <button
-              onClick={() => setShowAdmin(true)}
-              className={styles.adminButton}
-            >
-              <Settings className={styles.adminIcon} />
-              <span className={styles.adminButtonText}>Admin</span>
-            </button>
           </div>
         </div>
       </header>
 
-      <StepProgress 
+      <StepProgress
         currentStep={currentStep}
         completedSteps={completedSteps}
         isProcessing={isProcessing}
@@ -228,25 +198,25 @@ function App() {
           <p className={styles.footerText}>
             Powered by LogicalOutcomes Evaluation Planning Framework
           </p>
-          
+
           <div className={styles.footerLinks}>
-            <button 
+            <button
               onClick={() => setShowAboutApp(true)}
               className={styles.footerLinkButton}
             >
               About this app
             </button>
             <span className={styles.footerLinkSeparator}>•</span>
-            <a 
-              href="https://logicaloutcomes.net" 
-              target="_blank" 
+            <a
+              href="https://logicaloutcomes.net"
+              target="_blank"
               rel="noopener noreferrer"
               className={styles.footerLink}
             >
               Visit LogicalOutcomes
             </a>
             <span className={styles.footerLinkSeparator}>•</span>
-            <button 
+            <button
               onClick={() => setShowPrivacyPolicy(true)}
               className={styles.footerLinkButton}
             >
@@ -255,11 +225,11 @@ function App() {
           </div>
         </div>
       </footer>
-      
+
       {showAboutApp && (
         <AboutApp onClose={() => setShowAboutApp(false)} />
       )}
-      
+
       {showPrivacyPolicy && (
         <PrivacyPolicy onClose={() => setShowPrivacyPolicy(false)} />
       )}
