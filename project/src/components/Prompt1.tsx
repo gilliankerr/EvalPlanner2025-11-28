@@ -31,7 +31,7 @@ const Prompt1: React.FC<Prompt1Props> = ({ programData, updateProgramData, onCom
 
     try {
       const adminTemplate = await fetchPrompt('prompt1');
-      
+
       const analysisPrompt = buildPromptWithContext(adminTemplate, {
         organizationName: programData.organizationName,
         programName: programData.programName,
@@ -54,10 +54,9 @@ const Prompt1: React.FC<Prompt1Props> = ({ programData, updateProgramData, onCom
             organizationName: programData.organizationName,
             programName: programData.programName
           }
-        },
-        email: programData.userEmail
+        }
       };
-      
+
       const response = await fetch('/api/jobs', {
         method: 'POST',
         headers: {
@@ -73,9 +72,9 @@ const Prompt1: React.FC<Prompt1Props> = ({ programData, updateProgramData, onCom
       const data = await response.json();
       const createdJobId = data.job_id;
       setJobId(createdJobId);
-      
+
       console.log(`Job ${createdJobId} created, polling for results...`);
-      
+
       pollJobStatus(createdJobId);
 
     } catch (error) {
@@ -91,20 +90,20 @@ const Prompt1: React.FC<Prompt1Props> = ({ programData, updateProgramData, onCom
 
     const poll = async () => {
       try {
-        const response = await fetch(`/api/jobs/${jobId}?email=${encodeURIComponent(programData.userEmail)}`);
-        
+        const response = await fetch(`/api/jobs/${jobId}`);
+
         if (!response.ok) {
           throw new Error(`Job status check failed: ${response.status}`);
         }
 
         const job = await response.json();
-        
+
         if (job.status === 'completed') {
           const analysis = job.result;
-          
+
           let programTypePlural = '';
           let targetPopulation = '';
-          
+
           try {
             const jsonMatch = analysis.match(/```json\s*({[\s\S]*?})\s*```/);
             if (jsonMatch) {
@@ -126,7 +125,7 @@ const Prompt1: React.FC<Prompt1Props> = ({ programData, updateProgramData, onCom
           }
 
           setAnalysisResult(analysis);
-          updateProgramData({ 
+          updateProgramData({
             programAnalysis: analysis,
             programTypePlural: programTypePlural,
             targetPopulation: targetPopulation
@@ -137,7 +136,7 @@ const Prompt1: React.FC<Prompt1Props> = ({ programData, updateProgramData, onCom
             setIsProcessing(false);
             onComplete();
           }, 2000);
-          
+
         } else if (job.status === 'failed') {
           throw new Error(job.error || 'Job processing failed');
         } else if (job.status === 'pending' || job.status === 'processing') {
@@ -184,7 +183,7 @@ const Prompt1: React.FC<Prompt1Props> = ({ programData, updateProgramData, onCom
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             )}
-            
+
             <div>
               <h3 className={styles.statusTitle}>
                 {analysisStatus === 'analyzing' && 'Analyzing Program Model...'}
@@ -195,7 +194,7 @@ const Prompt1: React.FC<Prompt1Props> = ({ programData, updateProgramData, onCom
               <p className={styles.statusDescription}>
                 {analysisStatus === 'analyzing' && (
                   <>
-                    Processing... Please keep this window open until complete. Results will be emailed to {programData.userEmail}
+                    Processing... Please keep this window open until complete.
                     {jobId && <span style={{ display: 'block', marginTop: '8px', fontSize: '0.9em', opacity: 0.8 }}>Job ID: {jobId}</span>}
                   </>
                 )}
@@ -222,7 +221,7 @@ const Prompt1: React.FC<Prompt1Props> = ({ programData, updateProgramData, onCom
                 </button>
                 <button
                   onClick={() => {
-                    updateProgramData({ 
+                    updateProgramData({
                       programAnalysis: 'Analysis skipped by user due to error',
                       programTypePlural: 'programs of this type',
                       targetPopulation: 'the target population'

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\Users\\gilli\\.claude-worktrees\\EvalPlannerGK20251128\\elegant-euclid\" /B)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nSimplify architecture for Railway deployment\n\n- Remove admin functionality (PromptAdmin, sessions, settings endpoints)\n- Remove email functionality (Resend integration, send-to-email feature)\n- Store prompts as markdown files in prompts/ directory instead of database\n- Simplify database schema to jobs table only\n- Add /health endpoint for Railway health checks\n- Update default model to openai/gpt-4.1\n- Clean up unused dependencies (resend, zod, supabase-js, react-md-editor)\n- Update Dockerfile with explicit COPY commands and health check\n- Update deployment documentation\n\nEnvironment variables simplified to:\n- DATABASE_URL (required)\n- OPENROUTER_API_KEY (required)\n- PROMPT*_MODEL, PROMPT*_TEMPERATURE (optional)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

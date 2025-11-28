@@ -15,11 +15,11 @@ const StepOne: React.FC<StepOneProps> = ({ programData, updateProgramData, onCom
 
   const extractUrlsFromText = (text: string): string[] => {
     if (!text) return [];
-    
+
     // Regex to match URLs (http, https, www)
     const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
     const matches = text.match(urlRegex) || [];
-    
+
     return matches.map(url => {
       // Add https:// to www URLs
       if (url.startsWith('www.')) {
@@ -52,13 +52,6 @@ const StepOne: React.FC<StepOneProps> = ({ programData, updateProgramData, onCom
       newErrors.aboutProgram = 'Program description is required';
     }
 
-    // Email is always required for async job processing
-    if (!programData.userEmail.trim()) {
-      newErrors.userEmail = 'Email address is required';
-    } else if (!/\S+@\S+\.\S+/.test(programData.userEmail)) {
-      newErrors.userEmail = 'Please enter a valid email address';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -68,7 +61,7 @@ const StepOne: React.FC<StepOneProps> = ({ programData, updateProgramData, onCom
 
     const extractedUrls = extractUrlsFromText(programData.aboutProgram);
     updateProgramData({ urls: extractedUrls });
-    
+
     setIsProcessing(true);
     setTimeout(() => {
       setIsProcessing(false);
@@ -161,29 +154,6 @@ const StepOne: React.FC<StepOneProps> = ({ programData, updateProgramData, onCom
                 ))}
               </ul>
             </div>
-          )}
-        </div>
-
-        {/* Email Address - Always required for async job processing */}
-        <div className={styles.fieldGroup}>
-          <label className={styles.staticLabel}>
-            Email address<span className={styles.requiredStar}>*</span>
-          </label>
-          <p className={styles.processingNote}>
-            Your evaluation plan will be generated and emailed to you within 10 minutes. Please keep this window open until generation is complete. Your email address will not be shared or used for a mailing list. You may have to check your spam folder.
-          </p>
-          <input
-            type="email"
-            value={programData.userEmail}
-            onChange={(e) => updateProgramData({ userEmail: e.target.value })}
-            className={`${styles.input} ${errors.userEmail ? styles.inputError : ''}`}
-            placeholder="your@email.com"
-          />
-          {errors.userEmail && (
-            <p className={styles.errorMessage}>
-              <AlertCircle className={styles.errorIcon} />
-              {errors.userEmail}
-            </p>
           )}
         </div>
 

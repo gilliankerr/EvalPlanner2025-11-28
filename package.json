@@ -7,16 +7,11 @@
     "start": "node start-production.js",
     "dev": "cd project && npm run dev",
     "worker": "node worker.js",
-    "db:migrate": "./scripts/db-migrate.sh",
-    "db:seed": "node seed-prompts.js",
-    "deploy:railway:api": "railway up --service a46fb6de-bd40-4356-acbd-461745ea78ad",
-    "deploy:railway:worker": "railway up --service 3051b9bb-317b-469b-a70e-c4aaa64b0bf1",
-    "deploy:railway": "npm run deploy:railway:api && npm run deploy:railway:worker"
+    "db:migrate": "./scripts/db-migrate.sh"
   },
   "dependencies": {
     "@types/dompurify": "^3.0.5",
     "@types/marked": "^5.0.2",
-    "@uiw/react-md-editor": "^4.0.8",
     "cors": "^2.8.5",
     "dompurify": "^3.2.6",
     "dotenv": "^16.6.1",
@@ -25,9 +20,6 @@
     "jsdom": "^27.0.0",
     "marked": "^16.2.1",
     "node-fetch": "^3.3.2",
-    "pg": "^8.16.3",
-    "react-router-dom": "^7.9.3",
-    "resend": "^6.1.2",
-    "zod": "^4.1.8"
+    "pg": "^8.16.3"
   }
 }
