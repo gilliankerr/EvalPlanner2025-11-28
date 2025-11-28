@@ -1,0 +1,470 @@
+/* Overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+/* Modal Container */
+.modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #0085ca 0%, #0369a1 100%);
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 4px 0;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.closeButton {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 150ms ease;
+  margin: -8px -8px 0 0;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Content */
+.content {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Introduction Section */
+.introSection {
+  display: flex;
+  gap: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+  margin-bottom: 32px;
+}
+
+.introIcon {
+  width: 56px;
+  height: 56px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #0085ca;
+  box-shadow: 0 2px 8px rgba(0, 133, 202, 0.15);
+}
+
+.introText h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0c4a6e;
+  margin: 0 0 8px 0;
+}
+
+.introText p {
+  font-size: 0.9rem;
+  color: #1e3a5f;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+}
+
+.paperLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0085ca;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.paperLink:hover {
+  color: #006ba3;
+  text-decoration: underline;
+}
+
+/* Section */
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.sectionTitle svg {
+  color: #0085ca;
+}
+
+.sectionDesc {
+  font-size: 0.9rem;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+/* Logic Model Flow */
+.logicModelFlow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 16px 0;
+}
+
+.logicModelStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 120px;
+  flex: 1;
+}
+
+.stepIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.stepIcon span {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.stepLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.stepDesc {
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.flowArrow {
+  color: #d1d5db;
+  padding-top: 12px;
+  flex-shrink: 0;
+}
+
+/* Objectives Grid */
+.objectivesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.objectiveCard {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  transition: all 150ms ease;
+}
+
+.objectiveCard:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.objectiveNumber {
+  width: 32px;
+  height: 32px;
+  background: #0085ca;
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.objectiveContent h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.objectiveContent p {
+  font-size: 0.8rem;
+  color: #6b7280;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Phases Timeline */
+.phasesTimeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.phasesTimeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: #e5e7eb;
+}
+
+.phaseItem {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.phaseItem:last-child {
+  margin-bottom: 0;
+}
+
+.phaseDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: -24px;
+  margin-top: 4px;
+  box-shadow: 0 0 0 4px white;
+}
+
+.phaseBox {
+  flex: 1;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.phaseBox h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 6px 0;
+}
+
+.phaseBox p {
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Principles Grid */
+.principlesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.principleItem {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.checkIcon {
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.principleItem strong {
+  font-size: 0.9rem;
+  color: #111827;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.principleItem p {
+  font-size: 0.8rem;
+  color: #6b7280;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* About Section */
+.aboutSection {
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.aboutContent {
+  display: flex;
+  gap: 16px;
+}
+
+.aboutIcon {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.aboutContent h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.aboutContent p {
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 0 0 10px 0;
+}
+
+.aboutLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #0085ca;
+  text-decoration: none;
+}
+
+.aboutLink:hover {
+  text-decoration: underline;
+}
+
+/* CTA Section */
+.ctaSection {
+  text-align: center;
+  padding-top: 8px;
+}
+
+.ctaButton {
+  padding: 14px 36px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background: #0085ca;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.ctaButton:hover {
+  background: #006ba3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 133, 202, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal {
+    max-height: 95vh;
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .introSection {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .introIcon {
+    margin: 0 auto;
+  }
+
+  .logicModelFlow {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .flowArrow {
+    display: none;
+  }
+
+  .logicModelStep {
+    min-width: calc(50% - 8px);
+    margin-bottom: 16px;
+  }
+
+  .objectivesGrid,
+  .principlesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .aboutContent {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .aboutIcon {
+    margin: 0 auto;
+  }
+}

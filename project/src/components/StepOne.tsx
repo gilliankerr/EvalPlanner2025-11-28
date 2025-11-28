@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { AlertCircle, FileText, Clock, Lock, MapPin, BarChart3, ClipboardList, Calendar, ArrowRight, BookOpen } from 'lucide-react';
 import type { ProgramData } from '../App';
 import styles from './StepOne.module.css';
 
@@ -8,10 +8,17 @@ interface StepOneProps {
   updateProgramData: (data: Partial<ProgramData>) => void;
   onComplete: () => void;
   setIsProcessing: (processing: boolean) => void;
+  onShowExampleReport: () => void;
+  onShowAboutFramework: () => void;
 }
 
-const StepOne: React.FC<StepOneProps> = ({ programData, updateProgramData, onComplete, setIsProcessing }) => {
+const StepOne: React.FC<StepOneProps> = ({ programData, updateProgramData, onComplete, setIsProcessing, onShowExampleReport, onShowAboutFramework }) => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const formRef = useRef<HTMLDivElement>(null);
+
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const extractUrlsFromText = (text: string): string[] => {
     if (!text) return [];
@@ -70,11 +77,76 @@ const StepOne: React.FC<StepOneProps> = ({ programData, updateProgramData, onCom
   };
 
   return (
-    <div className={styles.formContainer}>
-      <div className={styles.formHeader}>
-        <h2 className={styles.formTitle}>Provide information</h2>
-        <p className={styles.formSubtitle}>Enter details about the program you want to evaluate</p>
+    <div className={styles.pageContainer}>
+      {/* Hero Section */}
+      <div className={styles.heroSection}>
+        <h1 className={styles.heroTitle}>Create a detailed evaluation plan in minutes</h1>
+        <p className={styles.heroSubtitle}>
+          Answer 3 simple questions. Get a comprehensive plan with logic model, indicators,
+          data collection methods, and implementation timeline.
+        </p>
+
+        <div className={styles.heroCtas}>
+          <button onClick={scrollToForm} className={styles.primaryCta}>
+            Get Started
+            <ArrowRight size={18} />
+          </button>
+          <button onClick={onShowExampleReport} className={styles.secondaryCta}>
+            <FileText size={18} />
+            See Example Report
+          </button>
+        </div>
+
+        <div className={styles.trustBadges}>
+          <div className={styles.badge}>
+            <Clock size={16} />
+            <span>5-10 minutes</span>
+          </div>
+          <div className={styles.badge}>
+            <Lock size={16} />
+            <span>No login required</span>
+          </div>
+          <div className={styles.badge}>
+            <MapPin size={16} />
+            <span>Free for Canadian nonprofits</span>
+          </div>
+        </div>
       </div>
+
+      {/* What You'll Get Section */}
+      <div className={styles.featuresSection}>
+        <h2 className={styles.featuresTitle}>What you'll get</h2>
+        <div className={styles.featuresGrid}>
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>
+              <BarChart3 size={24} />
+            </div>
+            <h3>Logic Model</h3>
+            <p>Visual map showing how your program creates change from inputs to long-term outcomes</p>
+          </div>
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>
+              <ClipboardList size={24} />
+            </div>
+            <h3>Evaluation Framework</h3>
+            <p>Specific indicators, data sources, collection methods, and respondents for each measure</p>
+          </div>
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>
+              <Calendar size={24} />
+            </div>
+            <h3>Implementation Plan</h3>
+            <p>Four-phase timeline with roles, responsibilities, and meeting agendas</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Form Section */}
+      <div className={styles.formContainer} ref={formRef}>
+        <div className={styles.formHeader}>
+          <h2 className={styles.formTitle}>Provide information</h2>
+          <p className={styles.formSubtitle}>Tell us about your program — don't worry, this doesn't need to be perfect</p>
+        </div>
 
       <div className={styles.formFields}>
         {/* Organization Name */}
@@ -164,6 +236,24 @@ const StepOne: React.FC<StepOneProps> = ({ programData, updateProgramData, onCom
         >
           Submit
         </button>
+      </div>
+      </div>
+
+      {/* About the Framework Section */}
+      <div className={styles.frameworkSection}>
+        <div className={styles.frameworkContent}>
+          <BookOpen size={24} className={styles.frameworkIcon} />
+          <div className={styles.frameworkText}>
+            <h3>Powered by research</h3>
+            <p>
+              This tool is based on the LogicalOutcomes Evaluation Planning Handbook,
+              a simplified evidence-based methodology developed over decades of working with nonprofit organizations.
+            </p>
+            <button onClick={onShowAboutFramework} className={styles.frameworkLink}>
+              Learn about the framework <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

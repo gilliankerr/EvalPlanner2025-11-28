@@ -9,6 +9,8 @@ import ReportTemplate from './components/ReportTemplate';
 import StepSix from './components/StepSix';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import AboutApp from './components/AboutApp';
+import ExampleReport from './components/ExampleReport';
+import AboutFramework from './components/AboutFramework';
 import StepProgress from './components/StepProgress';
 import { TOTAL_STEPS } from './config/workflow';
 import styles from './App.module.css';
@@ -49,6 +51,8 @@ export interface ProgramData {
 function App() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showAboutApp, setShowAboutApp] = useState(false);
+  const [showExampleReport, setShowExampleReport] = useState(false);
+  const [showAboutFramework, setShowAboutFramework] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -91,6 +95,8 @@ function App() {
               goToNextStep();
             }}
             setIsProcessing={setIsProcessing}
+            onShowExampleReport={() => setShowExampleReport(true)}
+            onShowAboutFramework={() => setShowAboutFramework(true)}
           />
         );
       case 2:
@@ -232,6 +238,14 @@ function App() {
 
       {showPrivacyPolicy && (
         <PrivacyPolicy onClose={() => setShowPrivacyPolicy(false)} />
+      )}
+
+      {showExampleReport && (
+        <ExampleReport onClose={() => setShowExampleReport(false)} />
+      )}
+
+      {showAboutFramework && (
+        <AboutFramework onClose={() => setShowAboutFramework(false)} />
       )}
     </div>
   );
