@@ -43,20 +43,44 @@ pool.on('error', (err, client) => {
   console.error('Pool waiting count:', pool.waitingCount);
 });
 
-// Add connection health check with fallback
+// Add connection health check with fallback and auto-migration
 async function checkDatabaseHealth() {
   try {
     const client = await pool.connect();
     try {
+      // 1. Check basic connectivity
       const result = await client.query('SELECT 1 as health_check');
       console.log('✓ Database health check passed:', result.rows[0]);
+
+      // 2. Auto-migrate: Ensure jobs table exists
+      console.log('Checking database schema...');
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS jobs (
+          id SERIAL PRIMARY KEY,
+          job_type TEXT NOT NULL,
+          status TEXT NOT NULL,
+          input_data JSONB NOT NULL,
+          result_data TEXT,
+          error TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          completed_at TIMESTAMPTZ,
+          CONSTRAINT jobs_status_chk CHECK (status IN ('pending', 'processing', 'completed', 'failed'))
+        );
+        CREATE INDEX IF NOT EXISTS jobs_status_idx ON jobs(status);
+        CREATE INDEX IF NOT EXISTS jobs_created_at_idx ON jobs(created_at);
+      `);
+      console.log('✓ Database schema verified (jobs table exists)');
+
       useInMemory = false;
       return true;
+    } catch (schemaError) {
+      console.error('✗ Database schema verification failed:', schemaError.message);
+      throw schemaError; // Re-throw to trigger fallback
     } finally {
       client.release();
     }
   } catch (error) {
-    console.warn('✗ Database health check failed:', error.message);
+    console.warn('✗ Database initialization failed:', error.message);
     console.warn('⚠️  Switching to IN-MEMORY job queue. Data will be lost on restart.');
     useInMemory = true;
     return true; // Return true because we have a working fallback
