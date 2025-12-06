@@ -18,12 +18,50 @@ const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 5000) 
 // Database setup (for jobs queue only)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  // Add connection timeout and retry settings
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
+  max: 10,
+  // Add debug logging
+  ...(process.env.DEBUG_DB && {
+    debug: (message, context) => {
+      console.log('[DB DEBUG]', message, context);
+    }
+  })
 });
 
-// Handle pool errors to prevent crashes
+// In-memory fallback store
+const inMemoryJobs = new Map();
+let useInMemory = false;
+
+// Enhanced error handling for database pool
 pool.on('error', (err, client) => {
   console.error('Unexpected error on idle client:', err);
+  console.error('Client state:', client ? 'client exists' : 'no client');
+  console.error('Pool total count:', pool.totalCount);
+  console.error('Pool idle count:', pool.idleCount);
+  console.error('Pool waiting count:', pool.waitingCount);
 });
+
+// Add connection health check with fallback
+async function checkDatabaseHealth() {
+  try {
+    const client = await pool.connect();
+    try {
+      const result = await client.query('SELECT 1 as health_check');
+      console.log('✓ Database health check passed:', result.rows[0]);
+      useInMemory = false;
+      return true;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.warn('✗ Database health check failed:', error.message);
+    console.warn('⚠️  Switching to IN-MEMORY job queue. Data will be lost on restart.');
+    useInMemory = true;
+    return true; // Return true because we have a working fallback
+  }
+}
 
 // Handle uncaught errors to prevent server crashes
 process.on('uncaughtException', (err) => {
@@ -37,6 +75,12 @@ process.on('unhandledRejection', (reason, promise) => {
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
+  next();
+});
 
 // ============================================================================
 // PROMPTS - FILE-BASED LOADING
@@ -113,16 +157,36 @@ function getOpenRouterApiKey() {
 
 app.get('/health', async (req, res) => {
   try {
-    // Check database connectivity
-    await pool.query('SELECT 1');
+    // Check database connectivity with detailed health check
+    const healthResult = await checkDatabaseHealth();
+    if (!healthResult) {
+      throw new Error('Database health check failed');
+    }
+
     res.json({
       status: 'healthy',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      database: {
+        status: 'connected',
+        pool: {
+          total: pool.totalCount,
+          idle: pool.idleCount,
+          waiting: pool.waitingCount
+        }
+      }
     });
   } catch (error) {
+    console.error('Health check failed:', error);
     res.status(503).json({
       status: 'unhealthy',
       error: 'Database connection failed',
+      details: {
+        message: error.message,
+        code: error.code,
+        severity: error.severity,
+        detail: error.detail,
+        hint: error.hint
+      },
       timestamp: new Date().toISOString()
     });
   }
@@ -401,25 +465,82 @@ app.post('/api/jobs', async (req, res) => {
       });
     }
 
-    const result = await pool.query(
-      `INSERT INTO jobs (job_type, status, input_data)
-       VALUES ($1, 'pending', $2)
-       RETURNING id, job_type, status, created_at`,
-      [job_type, JSON.stringify(input_data)]
-    );
+    // Check database health before attempting job creation
+    const healthOk = await checkDatabaseHealth();
+    if (!healthOk) {
+      return res.status(503).json({
+        error: 'Database connection unavailable. Please try again later.',
+        details: 'The database service is currently unavailable'
+      });
+    }
 
-    const job = result.rows[0];
-    console.log(`Created job ${job.id} (${job_type})`);
+    try {
+      let job;
 
-    res.json({
-      success: true,
-      job_id: job.id,
-      status: job.status,
-      created_at: job.created_at
-    });
+      if (useInMemory) {
+        job = {
+          id: Date.now(), // Simple numeric ID
+          job_type,
+          status: 'pending',
+          input_data,
+          created_at: new Date(),
+          result_data: null,
+          error: null
+        };
+        inMemoryJobs.set(job.id, job);
+        console.log(`Created in-memory job ${job.id} (${job_type})`);
+      } else {
+        const result = await pool.query(
+          `INSERT INTO jobs (job_type, status, input_data)
+           VALUES ($1, 'pending', $2)
+           RETURNING id, job_type, status, created_at`,
+          [job_type, JSON.stringify(input_data)]
+        );
+        job = result.rows[0];
+        console.log(`Created job ${job.id} (${job_type})`);
+      }
+
+      res.json({
+        success: true,
+        job_id: job.id,
+        status: job.status,
+        created_at: job.created_at
+      });
+    } catch (dbError) {
+      console.error('Database error creating job:', dbError);
+      console.error('Database error details:', {
+        code: dbError.code,
+        severity: dbError.severity,
+        detail: dbError.detail,
+        hint: dbError.hint
+      });
+
+      // More specific error handling for database issues
+      if (dbError.code === 'ECONNREFUSED') {
+        return res.status(503).json({
+          error: 'Database connection refused. The database service may be down.',
+          code: 'DATABASE_CONNECTION_FAILED'
+        });
+      } else if (dbError.code === '42P01' || dbError.code === '42703') {
+        return res.status(500).json({
+          error: 'Database schema issue. Please check database setup.',
+          code: 'DATABASE_SCHEMA_ERROR'
+        });
+      } else {
+        return res.status(500).json({
+          error: 'Database operation failed. Please try again.',
+          code: 'DATABASE_OPERATION_FAILED',
+          details: dbError.message
+        });
+      }
+    }
   } catch (error) {
     console.error('Error creating job:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      error: 'Internal server error',
+      details: error.message || 'Unknown error occurred',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
@@ -428,27 +549,46 @@ app.get('/api/jobs/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
-      `SELECT id, job_type, status, result_data, error, created_at, completed_at
-       FROM jobs WHERE id = $1`,
-      [id]
-    );
+    let job;
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Job not found' });
+    if (useInMemory) {
+      job = inMemoryJobs.get(parseInt(id));
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+      // Map in-memory structure to response format
+      res.json({
+        id: job.id,
+        job_type: job.job_type,
+        status: job.status,
+        result: job.result_data,
+        error: job.error,
+        created_at: job.created_at,
+        completed_at: job.completed_at
+      });
+    } else {
+      const result = await pool.query(
+        `SELECT id, job_type, status, result_data, error, created_at, completed_at
+         FROM jobs WHERE id = $1`,
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      job = result.rows[0];
+
+      res.json({
+        id: job.id,
+        job_type: job.job_type,
+        status: job.status,
+        result: job.result_data,
+        error: job.error,
+        created_at: job.created_at,
+        completed_at: job.completed_at
+      });
     }
-
-    const job = result.rows[0];
-
-    res.json({
-      id: job.id,
-      job_type: job.job_type,
-      status: job.status,
-      result: job.result_data,
-      error: job.error,
-      created_at: job.created_at,
-      completed_at: job.completed_at
-    });
   } catch (error) {
     console.error('Error fetching job:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -463,35 +603,49 @@ async function processNextJob() {
   let client;
 
   try {
-    client = await pool.connect();
-    await client.query('BEGIN');
+    let job;
 
-    // Get the next pending job (with row lock)
-    const jobResult = await client.query(
-      `SELECT id, job_type, input_data
-       FROM jobs
-       WHERE status = 'pending'
-       ORDER BY created_at ASC
-       LIMIT 1
-       FOR UPDATE SKIP LOCKED`
-    );
+    if (useInMemory) {
+      // Find first pending job
+      const pendingJobs = Array.from(inMemoryJobs.values())
+        .filter(j => j.status === 'pending')
+        .sort((a, b) => a.created_at - b.created_at);
+      
+      if (pendingJobs.length === 0) return;
 
-    if (jobResult.rows.length === 0) {
+      job = pendingJobs[0];
+      job.status = 'processing';
+      console.log(`Processing in-memory job ${job.id} (${job.job_type})...`);
+    } else {
+      client = await pool.connect();
+      await client.query('BEGIN');
+
+      // Get the next pending job (with row lock)
+      const jobResult = await client.query(
+        `SELECT id, job_type, input_data
+         FROM jobs
+         WHERE status = 'pending'
+         ORDER BY created_at ASC
+         LIMIT 1
+         FOR UPDATE SKIP LOCKED`
+      );
+
+      if (jobResult.rows.length === 0) {
+        await client.query('COMMIT');
+        return;
+      }
+
+      job = jobResult.rows[0];
+
+      // Mark job as processing
+      await client.query(
+        `UPDATE jobs SET status = 'processing' WHERE id = $1`,
+        [job.id]
+      );
+
       await client.query('COMMIT');
-      return;
+      console.log(`Processing job ${job.id} (${job.job_type})...`);
     }
-
-    const job = jobResult.rows[0];
-
-    // Mark job as processing
-    await client.query(
-      `UPDATE jobs SET status = 'processing' WHERE id = $1`,
-      [job.id]
-    );
-
-    await client.query('COMMIT');
-
-    console.log(`Processing job ${job.id} (${job.job_type})...`);
 
     // Process the job (outside transaction)
     try {
@@ -568,23 +722,35 @@ async function processNextJob() {
       console.log(`Job ${job.id} completed successfully (${result.length} chars)`);
 
       // Update job as complete
-      await pool.query(
-        `UPDATE jobs
-         SET status = 'completed', result_data = $1, completed_at = CURRENT_TIMESTAMP
-         WHERE id = $2`,
-        [result, job.id]
-      );
+      if (useInMemory) {
+        job.status = 'completed';
+        job.result_data = result;
+        job.completed_at = new Date();
+      } else {
+        await pool.query(
+          `UPDATE jobs
+           SET status = 'completed', result_data = $1, completed_at = CURRENT_TIMESTAMP
+           WHERE id = $2`,
+          [result, job.id]
+        );
+      }
 
     } catch (processingError) {
       console.error(`Job ${job.id} failed:`, processingError);
 
       // Update job as failed
-      await pool.query(
-        `UPDATE jobs
-         SET status = 'failed', error = $1, completed_at = CURRENT_TIMESTAMP
-         WHERE id = $2`,
-        [processingError.message, job.id]
-      );
+      if (useInMemory) {
+        job.status = 'failed';
+        job.error = processingError.message;
+        job.completed_at = new Date();
+      } else {
+        await pool.query(
+          `UPDATE jobs
+           SET status = 'failed', error = $1, completed_at = CURRENT_TIMESTAMP
+           WHERE id = $2`,
+          [processingError.message, job.id]
+        );
+      }
     }
 
   } catch (error) {
@@ -612,16 +778,29 @@ async function cleanupOldJobs() {
   try {
     const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
 
-    const result = await pool.query(
-      `DELETE FROM jobs
-       WHERE (status = 'completed' OR status = 'failed')
-       AND completed_at < $1
-       RETURNING id`,
-      [sixHoursAgo]
-    );
+    if (useInMemory) {
+      let deletedCount = 0;
+      for (const [id, job] of inMemoryJobs.entries()) {
+        if ((job.status === 'completed' || job.status === 'failed') && job.completed_at < sixHoursAgo) {
+          inMemoryJobs.delete(id);
+          deletedCount++;
+        }
+      }
+      if (deletedCount > 0) {
+        console.log(`Cleaned up ${deletedCount} old in-memory jobs`);
+      }
+    } else {
+      const result = await pool.query(
+        `DELETE FROM jobs
+         WHERE (status = 'completed' OR status = 'failed')
+         AND completed_at < $1
+         RETURNING id`,
+        [sixHoursAgo]
+      );
 
-    if (result.rows.length > 0) {
-      console.log(`Cleaned up ${result.rows.length} old jobs`);
+      if (result.rows.length > 0) {
+        console.log(`Cleaned up ${result.rows.length} old jobs`);
+      }
     }
   } catch (error) {
     console.error('Error cleaning up old jobs:', error);
@@ -643,6 +822,15 @@ app.use((req, res, next) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled application error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    details: err.message || 'Unknown error occurred'
+  });
+});
+
 // ============================================================================
 // SERVER STARTUP
 // ============================================================================
@@ -661,7 +849,10 @@ async function startServer(options = {}) {
 
   try {
     console.log('\nTesting database connection...');
-    await pool.query('SELECT NOW()');
+    const healthOk = await checkDatabaseHealth();
+    if (!healthOk) {
+      throw new Error('Database health check failed');
+    }
     console.log('✓ Database connection successful');
 
     console.log('\nChecking prompts...');

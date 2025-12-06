@@ -198,7 +198,35 @@ const ReportTemplate: React.FC<ReportTemplateProps> = ({ programData, updateProg
       });
 
       if (!response.ok) {
-        throw new Error(`Job creation failed: ${response.status}`);
+        let errorData;
+        let errorMessage;
+        
+        try {
+          const text = await response.text();
+          try {
+            errorData = JSON.parse(text);
+            errorMessage = errorData.error || `Job creation failed: ${response.status}`;
+          } catch (e) {
+            // Response was not JSON (likely HTML error page)
+            console.error('Received non-JSON error response:', text.substring(0, 500));
+            errorMessage = `Server error (${response.status}): The server returned an unexpected response format.`;
+            errorData = { details: text.substring(0, 200) };
+          }
+        } catch (e) {
+          errorMessage = `Connection failed: ${response.status}`;
+          errorData = {};
+        }
+
+        console.error('Job creation error details:', errorData);
+
+        // Handle specific error cases
+        if (response.status === 503 && errorMessage.includes('Database')) {
+          throw new Error('Database service unavailable. Please try again later.');
+        } else if (response.status === 500 && errorMessage.includes('DATABASE')) {
+          throw new Error('Database operation failed. Please check your database connection.');
+        } else {
+          throw new Error(errorMessage);
+        }
       }
 
       const data = await response.json();

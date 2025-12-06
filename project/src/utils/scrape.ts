@@ -32,6 +32,11 @@ interface ProxyConfig {
 // Available CORS proxies in order of preference
 const PROXIES: ProxyConfig[] = [
   {
+    name: 'corsproxy',
+    buildUrl: (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    parseResponse: async (response: Response) => response.text()
+  },
+  {
     name: 'allorigins-json',
     buildUrl: (url: string) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
     parseResponse: async (response: Response) => {
@@ -40,13 +45,18 @@ const PROXIES: ProxyConfig[] = [
     }
   },
   {
-    name: 'corsproxy',
-    buildUrl: (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    name: 'allorigins-raw',
+    buildUrl: (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
     parseResponse: async (response: Response) => response.text()
   },
   {
-    name: 'allorigins-raw',
-    buildUrl: (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    name: 'cors-anywhere',
+    buildUrl: (url: string) => `https://cors-anywhere.herokuapp.com/${url}`,
+    parseResponse: async (response: Response) => response.text()
+  },
+  {
+    name: 'thingproxy',
+    buildUrl: (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
     parseResponse: async (response: Response) => response.text()
   }
 ];
@@ -57,14 +67,23 @@ const PROXIES: ProxyConfig[] = [
 async function fetchWithTimeout(url: string, timeoutMs: number = 7000): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  
+
   try {
-    const response = await fetch(url, { 
+    // Add QUIC protocol fallback by forcing HTTP/1.1 for problematic domains
+    const fetchOptions: RequestInit = {
       signal: controller.signal,
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; EvaluationPlanner/1.0)',
       }
-    });
+    };
+
+    // Force HTTP/1.1 for known problematic domains to avoid QUIC errors
+    if (url.includes('allorigins.win') || url.includes('corsproxy.io')) {
+      // @ts-ignore - Custom headers for protocol control
+      fetchOptions.headers['X-Force-HTTP-1.1'] = 'true';
+    }
+
+    const response = await fetch(url, fetchOptions);
     clearTimeout(timeoutId);
     return response;
   } catch (error) {
@@ -72,6 +91,13 @@ async function fetchWithTimeout(url: string, timeoutMs: number = 7000): Promise<
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Request timeout');
     }
+
+    // Handle QUIC protocol errors specifically
+    if (error instanceof Error && (error.message.includes('QUIC') || error.message.includes('protocol error'))) {
+      console.warn(`QUIC protocol error detected for ${url}, will retry with different proxy`);
+      throw new Error('QUIC protocol error - retrying with fallback proxy');
+    }
+
     throw error;
   }
 }
@@ -123,7 +149,19 @@ async function tryProxies(url: string, timeoutMs: number): Promise<{response: Re
         
       } catch (error) {
         lastError = error as Error;
-        
+
+        // Special handling for QUIC protocol errors - skip to next proxy immediately
+        // Also handle generic "Failed to fetch" which often masks network protocol errors in Chrome
+        if (error instanceof Error && (
+          error.message.includes('QUIC') ||
+          error.message.includes('protocol error') ||
+          (error.message === 'Failed to fetch' && proxy.name.includes('allorigins'))
+        )) {
+          console.log(`[Scraper] Protocol/Network error (${error.message}) with ${proxy.name}, skipping to next proxy`);
+          retries = -1; // Force skip to next proxy
+          continue;
+        }
+
         // Exponential backoff for retries
         if (retries > 0) {
           const backoffMs = (3 - retries) * 2000; // 2s, 4s

@@ -25,44 +25,51 @@ const StepSix: React.FC<StepSixProps> = ({ programData, onComplete, setIsProcess
     setIsProcessing(true);
     setRenderStatus('rendering');
 
+    console.log('[StepSix] Starting renderHtmlReport');
+    console.log('[StepSix] programData:', {
+      hasEvaluationPlan: !!programData.evaluationPlan,
+      planLength: programData.evaluationPlan?.length,
+      programName: programData.programName,
+      organizationName: programData.organizationName
+    });
+
     // Simulate rendering process
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     try {
       // Validate evaluation plan exists
       if (!programData.evaluationPlan || programData.evaluationPlan.trim().length === 0) {
+        console.error('[StepSix] Evaluation plan is missing or empty');
         throw new Error('No evaluation plan content available. Please regenerate the plan.');
       }
 
-      console.log('Generating HTML from evaluation plan...');
-      console.log('Evaluation plan type:', typeof programData.evaluationPlan);
-      console.log('Evaluation plan value:', programData.evaluationPlan);
-      console.log('Evaluation plan length:', programData.evaluationPlan.length);
+      console.log('[StepSix] Generating HTML from evaluation plan...');
       
       // Use the unified HTML generation function
-      const htmlReport = generateFullHtmlDocument(programData.evaluationPlan, {
-        programName: programData.programName,
-        organizationName: programData.organizationName,
-        includePrintButton: true  // Include print button for downloads
-      });
+      let htmlReport;
+      try {
+        htmlReport = generateFullHtmlDocument(programData.evaluationPlan, {
+          programName: programData.programName,
+          organizationName: programData.organizationName,
+          includePrintButton: true  // Include print button for downloads
+        });
+      } catch (genError) {
+        console.error('[StepSix] generateFullHtmlDocument threw an error:', genError);
+        throw new Error(`HTML generation failed: ${genError instanceof Error ? genError.message : String(genError)}`);
+      }
       
       if (!htmlReport || htmlReport.trim().length === 0) {
+        console.error('[StepSix] HTML generation returned empty content');
         throw new Error('HTML generation returned empty content');
       }
       
-      console.log('HTML report generated successfully, length:', htmlReport.length);
-      console.log('First 500 chars of HTML:', htmlReport.substring(0, 500));
+      console.log('[StepSix] HTML report generated successfully, length:', htmlReport.length);
       setHtmlContent(htmlReport);
       setRenderStatus('complete');
       setIsProcessing(false);
       onComplete();
     } catch (error) {
-      console.error('Error rendering HTML report:', error);
-      console.error('Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        error: error
-      });
+      console.error('[StepSix] Error rendering HTML report:', error);
       setRenderStatus('idle');
       setIsProcessing(false);
       alert(`Failed to render HTML report: ${error instanceof Error ? error.message : 'Unknown error'}. Please try regenerating the plan.`);
